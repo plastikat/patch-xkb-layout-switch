@@ -36,8 +36,7 @@ set -eu
 
 # Configuration
 dist_desc=`lsb_release --short --description | sed 's/\s/_/g'`
-dist_arch=`uname -m`
-config_path="${dist_desc}-${dist_arch}.conf"
+config_path="${dist_desc}.conf"
 stat "$config_path" >/dev/null || exit 1
 
 source "$config_path"
@@ -49,7 +48,9 @@ cd "$build_relpath"
 # Source links might be commented out
 sudo sed -i.orig 's/^#\s*deb-src/deb-src/g' /etc/apt/sources.list
 
+sudo apt-mark unhold $pkg_name
 sudo apt-get update
+sudo apt-get --yes upgrade
 
 # Get source code and dependencies
 sudo apt-get --yes install devscripts
@@ -67,6 +68,7 @@ debuild -us -uc
 popd
 
 # Install patched package
+deb_name=`ls $pkg_name*.deb | grep -v dbg`
 sudo dpkg -i "./$deb_name"
 
 # Prevent package updates
